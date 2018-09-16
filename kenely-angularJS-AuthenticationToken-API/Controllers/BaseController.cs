@@ -1,0 +1,54 @@
+using Microsoft.AspNet.Identity;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Web.Http;
+
+namespace kenely.AuthenticationToken.API.Controllers
+{
+  public class BaseController<T> : ApiController where T : new()
+  {
+    protected override void Dispose(bool disposing)
+    {
+      if (disposing)
+      {
+        IDisposable disposable = new T() as IDisposable;
+        if (disposable != null)
+          disposable.Dispose();
+      }
+
+      base.Dispose(disposing);
+    }
+
+    public IHttpActionResult GetErrorResult(IdentityResult result)
+    {
+      if (result == null)
+      {
+        return InternalServerError();
+      }
+
+      if (!result.Succeeded)
+      {
+        if (result.Errors != null)
+        {
+          foreach (string error in result.Errors)
+          {
+            ModelState.AddModelError("", error);
+          }
+        }
+
+        if (ModelState.IsValid)
+        {
+          // No ModelState errors are available to send, so just return an empty BadRequest.
+          return BadRequest();
+        }
+
+        return BadRequest(ModelState);
+      }
+
+      return null;
+    }
+  }
+}
